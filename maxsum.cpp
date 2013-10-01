@@ -6,11 +6,11 @@ using namespace std;
 #define mode3 "/h"
 #define mode4 "/v"
 FILE * file;
-int A[33][33];
-int Row_num, Clm_num;
+int A[33][33], B[33][33];//array and a reflected array
+int Row_num, Clm_num, Row_numB;
 int PS[33][33];
 
-int fgint(FILE *file){
+int fgint(){
 	int tmp = 0;
 	int isPositive = 1;
 	char c;
@@ -25,10 +25,11 @@ int fgint(FILE *file){
 	return tmp * isPositive;
 }
 
-void readArray(FILE *file){
-	cout << "声明：若输入数字不足，程序自动以0补充" << endl;
-	Row_num = fgint(file);
-	Clm_num = fgint(file);
+void readArray(){
+	//cout << "声明：若输入数字不足，程序自动以0补充" << endl;
+	Row_num = fgint();
+	Row_numB = Row_num;
+	Clm_num = fgint();
 	if(Row_num > 32 || Clm_num > 32){
 		cerr << "行数或列数过多" << endl;
 		exit(1);
@@ -36,15 +37,17 @@ void readArray(FILE *file){
 	int i, j;
 	for (i = 1; i <= Row_num; i++){
 		for (j = 1; j <= Clm_num; j++){
-			A[i][j] = fgint(file);
+			A[i][j] = fgint();
+			B[i][j] = A[i][j];
 		}
 	}
 }
 
-void readArrayR(FILE *file){
-	cout << "声明：若输入数字不足，程序自动以0补充" << endl;
-	Row_num = fgint(file);
-	Clm_num = fgint(file);
+void readArrayR(){
+	//cout << "声明：若输入数字不足，程序自动以0补充" << endl;
+	Row_num = fgint();
+	Row_numB = Row_num;
+	Clm_num = fgint();
 	if(Row_num > 32 || Clm_num > 32){
 		cerr << "行数或列数过多" << endl;
 		exit(1);
@@ -52,7 +55,8 @@ void readArrayR(FILE *file){
 	int i, j;
 	for (i = 1; i <= Row_num; i++){
 		for (j = 1; j <= Clm_num; j++){
-			A[j][i] = fgint(file);
+			A[j][i] = fgint();
+			B[i][j] = A[j][i];
 		}
 	}
 }
@@ -78,7 +82,7 @@ int BC(int a, int c, int i){
 
 int MaxSum_mode1(int isCalled){
 	if(isCalled == 0){
-		readArray(file);
+		readArray();
 		cal_PS();
 	}
 	int maximum = -2147483648;
@@ -102,7 +106,7 @@ int MaxSum_mode1(int isCalled){
 }
 
 int MaxSum_mode2(){ //  /a
-	readArray(file);
+	readArray();
 	cal_PS();
 	int maximum = -2147483648;
 	return maximum;
@@ -110,7 +114,7 @@ int MaxSum_mode2(){ //  /a
 
 int MaxSum_mode3(int isCalled){ // /h
 	if(isCalled == 0){
-		readArray(file);
+		readArray();
 		cal_PS();
 	}
 	int MaxSum_noJump = MaxSum_mode1(1); // 不跨越的和最大子数组
@@ -151,18 +155,59 @@ void swap(int *a, int *b){
 	*a = *b;
 	*b = tmp;
 }
+
 int MaxSum_mode4(){ // /v
-	readArrayR(file);
+	fseek(file, 0, SEEK_SET);
+	readArrayR();
 	cal_PS();
 	swap(&Clm_num, &Row_num);
 	return MaxSum_mode3(1);
 }
 
-int MaxSum_mode5(){ // /h /v
-	readArray(file);
+void makeA(int a, int c){
+	int i, j;
+	for (i = 1; i < a; i++){
+		for (j = 1; j <= Clm_num; j++){
+			A[i][j] = B[i][j];
+		}
+	}
+	int iA = i;
+	for (i = c + 1; i <= Row_numB; i++){
+		for (j = 1; j <= Clm_num; j++){
+			A[i - c + a - 1][j] = B[i][j];
+		}
+	}
+	Row_num = Row_numB - (c - a + 1);
 	cal_PS();
-	int maximum = -2147483648;
-	return maximum;
+}
+
+int MaxSum_mode5(){ // /h /v
+	readArray();
+	cal_PS();
+	int Max_md1 = MaxSum_mode1(1);
+	int Max_md3 = MaxSum_mode3(1);
+	int Max_md4 = MaxSum_mode4();
+	swap(&Clm_num, &Row_num);
+	int Max_md5;
+
+	Max_md5 = -2147483648;
+	int a, c, tmp = Max_md5;
+	for (a = 2; a < Row_numB; a++){
+		for (c = a; c < Row_numB; c++){
+			makeA(a, c);
+			tmp = MaxSum_mode3(1);
+			if (tmp > Max_md5){
+				Max_md5 = tmp;
+			}
+		}
+	}
+	if(Max_md1 > Max_md5)
+		Max_md5 = Max_md1;
+	if(Max_md3 > Max_md5)
+		Max_md5 = Max_md3;
+	if(Max_md4 > Max_md5)
+		Max_md5 = Max_md4;
+	return Max_md5;
 }
 
 int main(int argc, char* argv[]){
@@ -196,7 +241,7 @@ int main(int argc, char* argv[]){
 
 	}
 	else if (argc == 4){ // /h /v
-		if ((strcmp(argv[1], mode2) == 0 && strcmp(argv[2], mode3) == 0) || (strcmp(argv[1], mode3) == 0 && strcmp(argv[2], mode2) == 0)){ // /v /h
+		if ((strcmp(argv[1], mode3) == 0 && strcmp(argv[2], mode4) == 0) || (strcmp(argv[1], mode4) == 0 && strcmp(argv[2], mode3) == 0)){ // /v /h
 			cout << "Mode: /h /v" << endl;
 			cout << MaxSum_mode5() << endl;
 			return 0;
@@ -206,4 +251,6 @@ int main(int argc, char* argv[]){
 		cerr << "This mode is not supported, input /a, /h, /v, /h /v, or just a file name" << endl;
 		exit(1);
 	}
+	fclose(file);
+	return 0;
 }

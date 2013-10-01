@@ -6,7 +6,7 @@
 input_heavy.txt有更复杂的测试量，以供备选，但是input.txt简单直观。
 
 参数形式： homework-02.exe <mode> <file name>
-其中<mode> 可以省略，或\h, \v, \a, \h \v, \v \h.其中有2个模式还没写完。。会尽快赶上！
+其中<mode> 可以省略，或\h, \v, \a, \h \v, \v \h.其中/a模式还没写完。。会尽快赶上！
 
 比如您可以尝试 homework-02.exe /h input.txt
 
